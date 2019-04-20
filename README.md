@@ -2,7 +2,14 @@
 
 # Query wikidata using logic predicates
 
-Example (command line):
+This is a module for
+[sparqlprog](https://github.com/cmungall/sparqlprog) that provides
+convenience predicates for making sparql queries over wikidata using
+logic programming terms. It allows you to define reusable query
+predicates, and to integrate programming constructs with queries in a
+declarative way.
+
+## Examples (command line):
 
 All cities over a certain population size together with their continents:
 
@@ -29,12 +36,29 @@ yields:
 Create a file `city_ontology.pro` with a single line:
 
 ```
-big_city(City) :- population(City,Pop),Pop>10000000.
+big_city(City) :- city(City),population(City,Pop),Pop>10000000.
 ```
+
+Now the `big_city/1` predicate can be reused in queries:
 
 ```
 pq-wikidata -c city_ontology.pro -C -l -L enlabel "big_city(City),part_of_continent(City,Continent)"
 ```
+
+yields:
+
+|city|continent|city label|continent label|
+|---|---|---|---|
+|wd:Q956|wd:Q48|Beijing|Asia|
+|wd:Q15174|wd:Q48|Shenzhen|Asia|
+|wd:Q1353|wd:Q48|Delhi|Asia|
+|wd:Q649|wd:Q46|Moscow|Europe|
+|wd:Q406|wd:Q48|Istanbul|Asia|
+|wd:Q406|wd:Q46|Istanbul|Europe|
+|wd:Q1156|wd:Q48|Mumbai|Asia|
+|wd:Q85|wd:Q15|Cairo|Africa|
+|wd:Q1355|wd:Q48|Bangalore|Asia|
+|wd:Q174|wd:Q18|São Paulo|South America|
 
 
 ## Installation
