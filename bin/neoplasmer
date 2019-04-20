@@ -1,0 +1,360 @@
+#!/usr/bin/env swipl -G12g
+
+:- initialization main.
+
+:- use_module(library(neoplasmer)).
+:- use_module(library(rdf_matcher)).
+
+:- use_module(library(sparqlprog/io_utils)).
+
+:- use_module(library(csv)).
+:- use_module(library(main)).
+:- use_module(library(optparse)).
+:- use_module(library(option)).
+:- use_module(library(index_util)).
+
+:- use_module(library(semweb/rdf_library)).
+:- use_module(library(semweb/rdf_http_plugin)).
+:- use_module(library(semweb/rdf_cache)).
+:- use_module(library(semweb/rdf_zlib_plugin)).
+:- use_module(library(semweb/rdf11)).
+:- use_module(library(semweb/rdfs)).
+
+:- use_module(library(pengines)).
+
+:- use_module(pengine_sandbox:library(neoplasmer)).
+:- use_module(pengine_sandbox:library(sparqlprog/labelutils)).
+:- use_module(pengine_sandbox:library(semweb/rdf11)).
+:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+
+% TODO: make configurable
+:- rdf_set_cache_options([ global_directory('RDF-Cache'),
+                           create_global_directory(true)
+                         ]).
+
+
+
+main(Argv) :-
+        Spec =
+        [
+         [opt(output), type(atom),
+          longflags(['output']),
+          shortflags([o]),
+          help('Outfile')
+         ],
+         [opt(format), type(atom),
+          longflags(['format']),
+          shortflags([f]),
+          help('Output format: csv')
+         ],
+         [opt(input), type(atom),
+          longflags(['input']),
+          shortflags([i]),
+          help('Input RDF file (use in combo with -x)')
+         ],
+         [opt(indexdir), type(atom),
+          longflags(['indexdir']),
+          shortflags(['X']),
+          help('path to directory to be used for materializing index')
+         ],
+         [opt(prefix), type(atom),
+          longflags(['prefix']),
+          shortflags([p]),
+          help('Prefix to perform matching against')
+         ],
+         [opt(ontology), type(atom),
+          longflags(['ontology']),
+          help('Prefix of ontology to be compared against; note if using indexes this will be filtered prior')
+         ],
+         [opt(port), type(integer),
+          longflags([port]),
+          help('Port to start pengines service on')
+         ],
+         [opt(goal), type(term),
+          longflags([goal]),
+          shortflags([g]),
+          help('Prolog goal to call')
+         ],
+         [opt(consult), type(atom),
+          longflags([consult]),
+          shortflags([c]),
+          help('Prolog program to load/consult')
+         ],
+         [opt(use), type(atom),
+          longflags([use]),
+          shortflags([u]),
+          help('Prolog module to use')
+         ],
+         [opt(use_no_import), type(atom),
+          longflags([use_no_import]),
+          shortflags(['U']),
+          help('Prolog module to use, do not import all')
+         ],
+         [opt(debug), type(term),
+          longflags([debug]),
+          shortflags([d]),
+          help('term passed to debug/1')
+         ],
+         [opt(attach), type(atom),
+          longflags([attach]),
+          shortflags(['A']),
+          help('rdf_attach_library - path to void.ttl')
+         ],
+         [opt(service), type(atom),
+          longflags([service]),
+          shortflags([s]),
+          help('name of remote service to query')
+         ],
+         [opt(inject_labels),
+          type(boolean),
+          default(false),
+          longflags([label]),
+          shortflags([l]),
+          help('Inject query for rdfs labels into query')
+         ],
+         [opt(obsoletes),
+          type(boolean),
+          default(false),
+          longflags([obsoletes]),
+          help('If set, include obsoletes in results')
+         ],
+         [opt(show),
+          type(boolean),
+          default(false),
+          longflags([show]),
+          shortflags(['S']),
+          help('Show SPARQL query')
+         ],
+         [opt(prolog),
+          type(boolean),
+          default(false),
+          longflags([prolog]),
+          shortflags(['P']),
+          help('Interactive prolog')
+         ],
+         [opt(interactive),
+          type(boolean),
+          default(false),
+          longflags([interactive]),
+          shortflags(['I']),
+          help('Interactive prolog')
+         ],
+         [opt(compile),
+          type(boolean),
+          default(false),
+          longflags([compile]),
+          shortflags(['C']),
+          help('Compile Prolog to SPARQL (no execution)')
+         ],
+         [opt(verbose),
+          type(boolean),
+          default(false),
+          longflags([verbose]),
+          shortflags([v]),
+          help('Same as --debug sparqlprog')
+         ],
+         [opt(stacktrace),
+          type(boolean),
+          default(false),
+          longflags([stacktrace]),
+          shortflags(['T']),
+          help('Shows stack trace on error')
+         ],
+         [opt(execute),
+          type(boolean),
+          default(false),
+          longflags([execute]),
+          shortflags([e]),
+          help('Executes query directly in prolog')
+         ],
+         [opt(query), type(term),
+          longflags([query]),
+          shortflags([q]),
+          help('Prolog query')
+         ]
+        ],
+        opt_parse(Spec, Argv, Opts, Files, [duplicated_flags(keepall)]),
+        handle_opts(Opts),
+        option(indexdir(IndexDir),Opts),
+        (   var(IndexDir)
+        ->  true
+        ;   (   exists_directory(IndexDir)
+            ->  debug(neoplasmer,'Using existing cache: ~w',[IndexDir])
+            ;   make_directory(IndexDir)),
+            debug(neoplasmer,'Indexing into: ~w',[IndexDir]),
+            index_pairs(IndexDir)),
+        opt_forall(port(X),server(X),Opts),
+        opt_if_call(interactive,sparqlprog_shell(Opts),Opts),
+        opt_if_call(prolog,prolog_shell(Opts),Opts),
+        forall(member(File,Files),
+               parse_and_match(File)),
+        halt.
+
+
+parse_and_match(File) :-
+        csv_read_file(File,Rows,[]),
+        maplist(parse_row,Rows).
+
+parse_row(Row) :-
+        Row =.. [_Pred,Term|_],
+        G = term_best_match(Term,_,_,_),
+        forall(G,
+               write_result_wrap(G,[format(tsv)])).
+
+
+write_result_wrap(G,Opts) :-
+        select(inject_labels(Inject),Opts,Opts2),
+        nonvar(Inject),
+        Inject,
+        !,
+        G =.. [P,A,B,C|Rest],
+        obj_label(A,NameA),
+        obj_label(B,NameB),
+        obj_label(C,NameC),
+        G2 =.. [P,A,NameA,B,NameB,C,NameC|Rest],
+        write_result_wrap(G2,Opts2).
+write_result_wrap(G,Opts) :-
+        write_result(G,Opts).
+
+obj_label(X,N) :-
+        rdf(X,rdfs:label,N),
+        !.
+obj_label(_,'') :- !.
+
+
+% Unify G with a goal that succeeds
+% if X passes criteria specified in Opts.
+%
+% these are intended to be executed prior to
+% matching
+opt_query_constraint_pre(X,G,Opts) :-
+        option(prefix(Prefix),Opts),
+        nonvar(Prefix),
+        !,
+        G=obj_has_prefix(X,Prefix).
+opt_query_constraint_pre(_,true,_).
+
+% as above, but executed after the fact
+opt_query_constraint_post(_,G,PostG,Opts) :-
+        option(obsoletes(Obs),Opts),
+        Obs=false,
+        G =.. [_,A,B|_],
+        !,
+        PostG = (is_not_obsolete(A),is_not_obsolete(B)).
+opt_query_constraint_post(_,_,true,_).
+
+is_not_obsolete(X) :-
+        \+ rdf(X,owl:deprecated,_).
+
+show_rules(Rs) :-
+        use_module(library(rule_eval)),
+        eval_rules(Rs,Pairs),
+        forall(member(P,Pairs),
+               show_rule(P)).
+
+:- op(1200, xfy, ::).
+
+show_rule(R-Scores) :-
+        memberchk(precision(Pr),Scores),
+        wrule( Pr::R ),
+        format('%% Scores: ~q.~n',[Scores]),
+        nl.
+
+wrule(R) :-
+        copy_term(R,R2),
+        numbervars(R2,0,_,[]),
+        format('~q.~n',[R2]).
+
+
+handle_opts(Opts) :-
+        opt_if_call(verbose,debug(neoplasmer),Opts),
+        opt_if_call(verbose,debug(index),Opts),
+        opt_if_call(verbose,debug(rule_eval),Opts),
+        opt_if_call(stacktrace,use_module(library(sparqlprog/stacktrace)),Opts),
+        opt_forall(attach(X),rdf_attach_library(X),Opts),
+        opt_forall(debug(X),debug(X),Opts),
+        opt_forall(use(X),use_module(library(X)),Opts),
+        opt_forall(use_no_import(X),use_module(library(X),[]),Opts),
+        opt_forall(ontology(Prefix),set_ontology(Prefix),Opts),
+        opt_forall(consult(X),consult(X),Opts),
+        opt_forall(input(X),rdf_load_wrap(X),Opts),
+        opt_forall(goal(X),X,Opts).
+
+
+
+
+% execute a goal for every ground instance of Template
+opt_forall(Template,Goal,Opts) :-
+        debug(sparqlprog,'Running ~q for all ground ~q in ~q',[Goal,Template,Opts]),
+        forall((member(Template,Opts),ground(Template)),
+               Goal).
+
+opt_if_call(Opt,Goal,Opts) :-
+        T =.. [Opt,Var],
+        member(T,Opts),
+        ground(Var),
+        Var=true,
+        !,
+        Goal.
+opt_if_call(_,_,_).
+
+opt_if(T,Opts) :-
+        member(T,Opts),
+        ground(T),
+        !.
+opt_if(T,Opts,Opts2) :-
+        select(T,Opts,Opts2),
+        ground(T),
+        !.
+
+
+
+rdf_load_wrap(X) :-
+        catch(rdf_load(X),
+              _E,
+              rdf_load_library(X)).
+
+% TODO: get from elsewhere
+sparqlprog_shell(Opts):-
+        format('% Starting pl2sparql shell~n'),
+        current_input(IO),
+        HFile='.sparqlprog_history',
+        (   exists_file(HFile)
+        ->  rl_read_history(HFile)
+        ;   true),
+        repeat,
+        read_line_to_codes(IO,Codes),
+        (   Codes=end_of_file
+        ->  !
+        ;   atom_codes(A,Codes),
+            rl_add_history(A),
+            format('Cmd: ~w~n',[A]),
+            concat_atom(L,' ',A),
+            catch(run(L,Opts),
+                  E,
+                  (   format('ERROR:~n~w~n',[E]),fail)),
+            format('SUCCESS!~n'),
+            rl_write_history(HFile),
+            fail).
+
+prolog_shell(_Opts):-
+        format('% Starting prolog shell~n'),
+        HFile='.plhistory',
+        (   exists_file(HFile)
+        ->  rl_read_history(HFile)
+        ;   true),
+        prolog,
+        format('% Bye!~n'),
+        rl_write_history(HFile),
+        halt.
+
+server :-
+        getenv('PORT',PortAtom),
+        atom_number(PortAtom,Port),
+        server(Port).
+
+server(Port) :-
+        http_server(http_dispatch, [port(Port)]),
+        T is 10 ** 10,
+        sleep(T).
