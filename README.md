@@ -139,3 +139,13 @@ SELECT ?var ?drug ?condition WHERE {
   ?v0 <http://www.wikidata.org/prop/statement/P3354> ?drug
 }
 ```
+
+## Other Queries
+
+Location of San Francisco:
+
+```
+$ pq-wikidata -l -L enlabel  "geolocation(wd:'Q62',Lat,Long,Precision,Globe)"
+37.766667,-122.433333,1.0E-6,wd:Q2,$null$,$null$,$null$,Earth
+```
+
