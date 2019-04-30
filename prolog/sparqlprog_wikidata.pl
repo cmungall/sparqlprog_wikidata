@@ -15,7 +15,28 @@
            enlabel/2,
            enlabelp/2,
            enlabel_any/2,
-           exact_match/2
+           en_alt_label/2,
+           en_description/2,
+
+           subont/3,
+           extract_subontology/2,
+
+           entity_search/2,
+           entity_search/3,
+           exact_match/2,
+           entailed_instance_of_name/2,
+           instance_of_name/2,
+
+           population_at/3,
+           geolocation/5,
+           geolocation/4,
+           geolocation/3,
+           coordinate_location_node/2,
+           node_geolocation/5,
+           node_geolocation/4,
+           node_geolocation/3,
+
+           geolocation_around/3
 
            ]).
 
@@ -35,6 +56,9 @@
 :- rdf_register_prefix(wd,'http://www.wikidata.org/entity/').
 :- rdf_register_prefix(wdt,'http://www.wikidata.org/prop/direct/').
 :- rdf_register_prefix(wbont,'http://wikiba.se/ontology#').
+:- rdf_register_prefix(wikibase,'http://wikiba.se/ontology#').
+:- rdf_register_prefix(bd,'http://www.bigdata.com/rdf#').
+:- rdf_register_prefix(mwapi, 'https://www.mediawiki.org/ontology#API/').
 
 :- rdf_register_prefix(instance_of,'http://www.wikidata.org/prop/direct/P31').
 
@@ -45,12 +69,14 @@ user:term_expansion(pname_wid(Module,P,Id),
                      (   Head_trans :- Body_trans),
                      (   Head_s :- Body_s),
                      (   Head_ps :- Body_ps),
+                     (   Head_psv :- Body_psv),
                      (   Head_q :- Body_q),
                      (   Head_iri :- true),
                      (   Head_eiri :- true),
                      (   :- initialization(export(P_trans/2), now)),
                      (   :- initialization(export(P_s/2), now)),
                      (   :- initialization(export(P_ps/2), now)),
+                     (   :- initialization(export(P_psv/2), now)),
                      (   :- initialization(export(P_q/2), now)),
                      (   :- initialization(export(P_iri/1), now)),
                      (   :- initialization(export(P_eiri/1), now)),
@@ -95,6 +121,12 @@ user:term_expansion(pname_wid(Module,P,Id),
         Head_ps =.. [P_ps,S,O],
         atom_concat('http://www.wikidata.org/prop/statement/',Frag,Px_ps),
         Body_ps = rdf(S,Px_ps,O),
+
+        % psv: 
+        atom_concat(P,'_psv',P_psv),
+        Head_psv =.. [P_psv,S,O],
+        atom_concat('http://www.wikidata.org/prop/statement/value/',Frag,Px_psv),
+        Body_psv = rdf(S,Px_psv,O),
         
         % pq: Links qualifier from statement node
         % wds:Q3-24bf3704-4c5d-083a-9b59-1881f82b6b37 pq:P8 "-13000000000-01-01T00:00:00Z"^^xsd:dateTime
@@ -143,12 +175,43 @@ user:term_expansion(cname_wid(Module,C,Id),
         Body3 = rdf(I,zeroOrMore('http://www.wikidata.org/prop/direct/P279'),Cx),
         RuleIsa = (Head3 :- Body3).
 
+subont(C,A,B) :-
+        subclass_of_transitive(C,A),subclass_of(A,B).
+subont(C,A,B) :-
+        subclass_of_transitive(B,C),subclass_of(A,B).
+
+
+extract_subontology(CN,File) :-
+        ensure_loaded(library(semweb/turtle)),
+        forall('??'(wd,(label(C,CN@en),subont(C,A,B),enlabel(A,AN))),
+               (   rdf_assert(A,rdfs:subClassOf,B,File),
+                   rdf_assert(A,rdf:type,owl:'Class',File),
+                   rdf_assert(A,rdfs:label,AN,File))),
+        rdf_save_turtle(File,[graph(File)]).
+        
 
 enlabel(E,N) :- label(E,N),lang(N)="en".
 enlabelp(E,N) :- rdf(X,wbont:directClaim,E),enlabel(X,N).
 enlabel_any(E,N) :- enlabel(E,N).
 enlabel_any(E,N) :- enlabelp(E,N).
 
+en_alt_label(E,N) :- rdf(E,skos:altLabel,N),lang(N)="en".
+en_description(E,N) :- rdf(E,'http://schema.org/description',N),lang(N)="en".
+
+
+entity_search(Term, Item) :-
+        entity_search(Term, Item, 1).
+
+entity_search(Term, Item, Limit) :-
+        service(wikibase:mwapi,
+                (   rdf(bd:serviceParam, wikibase:api, "EntitySearch"^^xsd:string),
+                    rdf(bd:serviceParam, wikibase:endpoint, "www.wikidata.org"^^xsd:string),
+                    rdf(bd:serviceParam, mwapi:search, Term@en),
+                    rdf(bd:serviceParam, mwapi:language, "en"^^xsd:string),
+                    rdf(bd:serviceParam, mwapi:limit, Limit ^^ xsd:int),
+                    rdf(Item, wikibase:apiOutputItem, mwapi:item))).
+
+        
 
 
 % --------------------
@@ -172,6 +235,18 @@ pname_wid(meta,equivalent_property, p1628).
 pname_wid(meta,property_constraint, p2302).
 pname_wid(meta,properties_for_this_type, p1963).
 
+pname_wid(meta,point_in_time, p585).
+
+
+instance_of_name(I,CN) :-
+        instance_of(I,C),
+        rdf(C,rdfs:label,CN@en).
+entailed_instance_of_name(I,CN) :-
+        instance_of(I,C1),
+        subclass_of_transitive(C1,C),
+        rdf(C,rdfs:label,CN@en).
+
+
 property_constraint_pv(P,C,PP,V) :-
         property_constraint_e2s(P,S),
         rdf(S,PP,V),
@@ -181,8 +256,8 @@ property_constraint_pv(P,C,PP,V) :-
 pname_wid(meta,author, p50).
 pname_wid(meta,exact_match, p2888).
 
-% geo
-pname_wid(geo,coordinate_location, p625).
+pname_wid(general,part_of, p361).
+
 
 % bio
 
@@ -226,7 +301,6 @@ pname_wid(bio,medical_condition_treated, p2175).
 pname_wid(bio,physically_interacts_with, p129).
 pname_wid(bio,location, p276).
 pname_wid(bio,manifestation_of, p1557).
-pname_wid(bio,part_of, p361).
 pname_wid(bio,followed_by, p156).
 pname_wid(bio,product_or_material_produced, p1056).
 pname_wid(bio,uses, p2283).
@@ -249,8 +323,67 @@ cname_wid(geo,geographic_entity, q27096213).
 cname_wid(geo,continent, q5107).
 cname_wid(geo,country, q6256).
 cname_wid(geo,city, q515).
+cname_wid(geo,river, q4022).
+cname_wid(geo,landform, q271669).
+cname_wid(geo,undersea_landform, q55182671).
+cname_wid(geo,wetland,q170321).
+cname_wid(geo,forest,q4421).
+cname_wid(geo,protected_area,q3825807).
+
+
 pname_wid(geo,population, p1082).
 pname_wid(geo,part_of_continent, p30).
+pname_wid(geo,coordinate_location, p625). 
+pname_wid(geo,elevation_above_sea_level, p2044). 
+pname_wid(geo,located_on_terrain_feature, p706).
+pname_wid(geo,tributary,p974).
+
+
+
+pname_wid(geo,geonames_id, p1566).
+pname_wid(geo,geonames_feature_code, p2452).
+
+population_at(E,Pop,Time) :-
+        population_e2s(E,S),
+        point_in_time_s2q(S,Time),
+        population_s2v(S,Pop).
+
+
+coordinate_location_node(E,N) :-
+        coordinate_location_e2s(E,S),
+        coordinate_location_psv(S,N).
+
+geolocation(E,Lat,Long,Precision,Globe) :-
+        coordinate_location_node(E,N),
+        node_geolocation(N,Lat,Long,Precision,Globe).
+geolocation(E,Lat,Long,Precision) :-
+        coordinate_location_node(E,N),
+        node_geolocation(N,Lat,Long,Precision).
+geolocation(E,Lat,Long) :-
+        coordinate_location_node(E,N),
+        node_geolocation(N,Lat,Long).
+
+node_geolocation(N,Lat,Long,Precision,Globe) :-
+        rdf(N,wbont:geoLatitude,Lat),
+        rdf(N,wbont:geoLongitude,Long),
+        rdf(N,wbont:geoPrecision,Precision),
+        rdf(N,wbont:geoGlobe,Globe).
+node_geolocation(N,Lat,Long,Precision) :-
+        rdf(N,wbont:geoLatitude,Lat),
+        rdf(N,wbont:geoLongitude,Long),
+        rdf(N,wbont:geoPrecision,Precision).
+node_geolocation(N,Lat,Long) :-
+        rdf(N,wbont:geoLatitude,Lat),
+        rdf(N,wbont:geoLongitude,Long).
+
+geolocation_around(Center, Radius, X) :-
+        service(wikibase:around,
+                (   coordinate_location(X,_Loc),
+                    rdf(bd:serviceParam,wikibase:center,Center),
+                    rdf(bd:serviceParam,wikibase:radius,Radius^^xsd:float))).
+        
+
+% https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries#Working_with_coordinates
 
 % chem
 cname_wid(chem,chemical_property, q21294996).

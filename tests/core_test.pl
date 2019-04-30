@@ -1,4 +1,4 @@
-:- use_module(library()).
+:- use_module(library(sparqlprog_wikidata)).
 
 :- begin_tests(core).
 
