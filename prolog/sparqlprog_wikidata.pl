@@ -42,9 +42,11 @@
 
 :- use_module(library(sparqlprog)).
 :- use_module(library(semweb/rdf11)).
+:- use_module(library(sparqlprog/ontologies/owl), [label/2]).
 
 :- sparql_endpoint( wd, 'http://query.wikidata.org/sparql').
 
+:- rdf_register_prefix(skos, 'http://www.w3.org/2004/02/skos/core#').
 :- rdf_register_prefix(foaf,'http://xmlns.com/foaf/0.1/').
 :- rdf_register_prefix(dbont,'http://dbpedia.org/ontology/').
 %:- rdf_register_prefix(dcterms,'http://purl.org/dc/terms').
@@ -199,8 +201,13 @@ en_alt_label(E,N) :- rdf(E,skos:altLabel,N),lang(N)="en".
 en_description(E,N) :- rdf(E,'http://schema.org/description',N),lang(N)="en".
 
 
+%! entity_search(+Term, ?Item, +Limit:int)
+%
+% named entity search
+%
 entity_search(Term, Item) :-
         entity_search(Term, Item, 1).
+
 
 entity_search(Term, Item, Limit) :-
         service(wikibase:mwapi,
@@ -426,6 +433,7 @@ var_drug_condition(V,D,C,positive_therapeutic_predictor) :-
         positive_therapeutic_predictor_e2s(V,S),
         medical_condition_treated_s2q(S,C),
         positive_therapeutic_predictor_s2v(S,D).
+
 
 
 
