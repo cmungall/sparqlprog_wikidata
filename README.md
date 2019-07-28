@@ -19,19 +19,20 @@ pq-wikidata -C -l -L enlabel "city(City),part_of_continent(City,Continent),popul
 
 yields:
 
-|City|Continent|Population|City Name|Continent Name||
+|City|Continent|Population|City Name|Continent Name|Pop Name|
 |---|---|---|---|---|---|
-|wd:Q174|wd:Q18|12106920|São Paulo|South America|$null$
-|wd:Q649|wd:Q46|12500123|Moscow|Europe|$null$
-|wd:Q1355|wd:Q48|10535000|Bangalore|Asia|$null$
-|wd:Q1156|wd:Q48|12442373|Mumbai|Asia|$null$
-|wd:Q406|wd:Q48|14657434|Istanbul|Asia|$null$
-|wd:Q406|wd:Q46|14657434|Istanbul|Europe|$null$
-|wd:Q85|wd:Q15|19500000|Cairo|Africa|$null$
-|wd:Q15174|wd:Q48|11908400|Shenzhen|Asia|$null$
-|wd:Q956|wd:Q48|21710000|Beijing|Asia|$null$
-|wd:Q1353|wd:Q48|26495000|Delhi|Asia|$null$
+|wd:Q174|wd:Q18|12106920|São Paulo|South America|$null$|
+|wd:Q649|wd:Q46|12500123|Moscow|Europe|$null$|
+|wd:Q1355|wd:Q48|10535000|Bangalore|Asia|$null$|
+|wd:Q1156|wd:Q48|12442373|Mumbai|Asia|$null$|
+|wd:Q406|wd:Q48|14657434|Istanbul|Asia|$null$|
+|wd:Q406|wd:Q46|14657434|Istanbul|Europe|$null$|
+|wd:Q85|wd:Q15|19500000|Cairo|Africa|$null$|
+|wd:Q15174|wd:Q48|11908400|Shenzhen|Asia|$null$|
+|wd:Q956|wd:Q48|21710000|Beijing|Asia|$null$|
+|wd:Q1353|wd:Q48|26495000|Delhi|Asia|$null$|
 
+The `-l` argument auto-adds labels for every column (this is meaningless for the population column but this is included for consistency)
 
 Create a file `city_ontology.pro` with a single line:
 
@@ -67,13 +68,15 @@ yields:
 
 To run queries on the command line:
 
-`alias pq-wikidata="docker run cmungall/sparqlprog_wikidata pq-wikidata`
+```
+alias pq-wikidata="docker run cmungall/sparqlprog_wikidata pq-wikidata
+```
 
 To run a service:
 
-`docker run -p 9083:9083 cmungall/sparqlprog_wikidata`
-
-
+```
+docker run -p 9083:9083 cmungall/sparqlprog_wikidata
+```
 
 ### Within SWI Environment
 
@@ -104,15 +107,15 @@ SELECT ?city WHERE {
 For each predicate in the defined subset, for example, [regulates (molecular biology)](http://www.wikidata.org/prop/direct/P128), the following predicates will be defined:
 
  * `regulates/2` - direct assertion between regulator and regulated
- * `regulates_transitive/`2 - transitive version of above
+ * `regulates_transitive/2` - transitive version of above
  * `regulates_iri/1` - IRI for regulates
 
 Further predicates will be defined that utilize the wikidata reification model. 
 
- * `<predicate>_eiri/1` - Entity IRI for predicate
- * `<predicate>_e2s` - links entity to statement
- * `<predicate>_s2v` - links value from statement
- * `<predicate>_s2q` - links qualifier statement
+ * `$predicate_eiri/1` - Entity IRI for predicate
+ * `$predicate_e2s` - links entity to statement
+ * `$predicate_s2v` - links value from statement
+ * `$predicate_s2q` - links qualifier statement
 
 To illustrate consider the definition of the following 3-ary predicate, based on the [positive therapeutic predictor](http://www.wikidata.org/prop/direct/P3354) predicate in wikidata. These triples can be qualified by [medical condition treated](http://www.wikidata.org/prop/direct/P2175).
 
@@ -149,3 +152,10 @@ $ pq-wikidata -l -L enlabel  "geolocation(wd:'Q62',Lat,Long,Precision,Globe)"
 37.766667,-122.433333,1.0E-6,wd:Q2,$null$,$null$,$null$,Earth
 ```
 
+## TODO
+
+Document API calls, search, etc
+
+## Uses
+
+See: [environments2wikidata](https://github.com/cmungall/environments2wikidata)
