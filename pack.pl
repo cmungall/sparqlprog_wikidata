@@ -5,5 +5,7 @@ author('Chris Mungall','cmungall@gmail.com').
 packager('Chris Mungall','cmungall@gmail.com').
 home('https://github.com//sparqlprog_wikidata').
 download('https://github.com/cmungall/sparqlprog_wikidata/releases/*.zip' ).
+requires(dcgutils).
+requires(regex).
 requires(sparqlprog).
 
