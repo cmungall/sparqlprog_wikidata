@@ -44,12 +44,12 @@ VERSION = v$(shell swipl -l pack.pl -g "version(V),writeln(V),halt.")
 show-version:
 	echo $(VERSION)
 
-IM = /sparqlprog_wikidata
+IM = cmungall/sparqlprog_wikidata
 
 docker-all: docker-clean docker-build docker-run
 
 docker-clean:
-	docker kill /neoplasmer || echo not running ;
+	docker kill /sparqlprog_wikidata || echo not running ;
 	docker kill $(IM) || echo not running ;
 	docker rm $(IM) || echo not made 
 
