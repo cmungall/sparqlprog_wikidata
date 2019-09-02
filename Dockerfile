@@ -1,4 +1,4 @@
-FROM swipl:7.5.12
+FROM swipl:8.0.3
 MAINTAINER Chris Mungall <cjmungall@lbl.gov>
 RUN apt-get update && apt-get install -y  --no-install-recommends make ca-certificates curl
 
@@ -11,7 +11,8 @@ RUN curl -L -s https://raw.githubusercontent.com/cmungall/sparqlprog/master/bin/
 RUN chmod +x /tools/bin/pl2sparql
 WORKDIR /tools
 RUN swipl -l install.pl -g install_requirements,halt
-RUN swipl -l install.pl -g install_this,halt
+###RUN swipl -l install.pl -g install_requirements,halt && echo success || echo carrying on
+### RUN swipl -l install.pl -g install_this,halt
 ENV PATH "/tools/bin:$PATH"
 
 # EXPOSE ${PORT}

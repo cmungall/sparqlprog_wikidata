@@ -7,7 +7,7 @@
 #PACKNAME=sparkle
 #include ../Makefile.inc
 
-SWIPL = swipl  -L0 -G0 -T0  -p library=prolog
+SWIPL = swipl -p library=prolog
 all: test
 
 check:
