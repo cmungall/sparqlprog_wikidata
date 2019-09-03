@@ -14,7 +14,7 @@ declarative way.
 All cities over a certain population size together with their continents:
 
 ```
-pq-wikidata -C -l -L enlabel "city(City),part_of_continent(City,Continent),population(City,Pop),Pop>10000000"
+pq-wikidata -l -L enlabel "city(City),part_of_continent(City,Continent),population(City,Pop),Pop>10000000"
 ```
 
 yields:
@@ -43,7 +43,7 @@ big_city(City) :- city(City),population(City,Pop),Pop>10000000.
 Now the `big_city/1` predicate can be reused in queries:
 
 ```
-pq-wikidata -c city_ontology.pro -C -l -L enlabel "big_city(City),part_of_continent(City,Continent)"
+pq-wikidata --consult city_ontology.pro -l -L enlabel "big_city(City),part_of_continent(City,Continent)"
 ```
 
 yields:
@@ -61,6 +61,73 @@ yields:
 |wd:Q1355|wd:Q48|Bangalore|Asia|
 |wd:Q174|wd:Q18|São Paulo|South America|
 
+Qualified properties may be represented by n-ary predicates, such as `population_at/3`: 
+
+```
+$ pq-wikidata -f tsv --consult tests/city_ontology.pro -l -L enlabel 'big_city(City),population_at(City,Pop,At),in_time_interval("2010-01-01"^^xsd:dateTime,"2013-01-01"^^xsd:dateTime,At)' | tbl2ghwiki 
+```
+
+|City|Pop|Time|City Name|---|---|
+|---|---|---|---|---|---|
+|wd:Q1353|16787941|2011-01-01T00:00:00Z|Delhi|$null$|$null$
+|wd:Q406|13624240|2011-01-01T00:00:00Z|Istanbul|$null$|$null$
+|wd:Q649|11856578|2012-01-01T00:00:00Z|Moscow|$null$|$null$
+|wd:Q3630|9607787|2010-01-01T00:00:00Z|Jakarta|$null$|$null$
+|wd:Q404763|12010000|2011-01-01T00:00:00Z|Nanyang|$null$|$null$
+|wd:Q649|11979529|2013-01-01T00:00:00Z|Moscow|$null$|$null$
+|wd:Q649|11503501|2010-01-01T00:00:00Z|Moscow|$null$|$null$
+|wd:Q11746|10220000|2013-01-01T00:00:00Z|Wuhan|$null$|$null$
+|wd:Q406|14160467|2013-01-01T00:00:00Z|Istanbul|$null$|$null$
+|wd:Q649|11776764|2011-01-01T00:00:00Z|Moscow|$null$|$null$
+|wd:Q42622|10465994|2010-01-01T00:00:00Z|Suzhou|$null$|$null$
+|wd:Q174|11316149|2011-01-01T00:00:00Z|São Paulo|$null$|$null$
+|wd:Q406|13255685|2010-01-01T00:00:00Z|Istanbul|$null$|$null$
+|wd:Q406|13854740|2012-01-01T00:00:00Z|Istanbul|$null$|$null$
+|wd:Q1355|8425970|2011-01-01T00:00:00Z|Bangalore|$null$|$null$
+|wd:Q174|11253503|2010-01-01T00:00:00Z|São Paulo|$null$|$null$
+|wd:Q1490|13159388|2010-01-01T00:00:00Z|Tokyo|$null$|$null$
+|wd:Q15174|10628900|2013-01-01T00:00:00Z|Shenzhen|$null$|$null$
+|wd:Q3838|9464000|2012-01-01T00:00:00Z|Kinshasa|$null$|$null$
+|wd:Q373346|10820000|2011-01-01T00:00:00Z|Linyi|$null$|$null$
+|wd:Q1352|4646732|2011-01-01T00:00:00Z|Chennai|$null$|$null$
+|wd:Q11739|7129629|2010-01-01T00:00:00Z|Lahore|$null$|$null$
+|wd:Q1156|12442373|2011-01-01T00:00:00Z|Mumbai|$null$|$null$
+
+
+The [entity_search/2](https://www.swi-prolog.org/pack/file_details/sparqlprog_wikidata/prolog/sparqlprog_wikidata.pl#entity_search/2) predicate provides access to the Wikibase EntitySearch function. The following example finds all subclasses of a symptom by name:
+
+```
+$ pq-wikidata -l -L enlabel "entity_search(vomiting,Match),subclass_of_transitive(Symptom,Match)"
+```
+
+|Match|Symptom|Match Label|Symptom Label|
+|---|---|---|---|
+|wd:Q127076|wd:Q127076|vomiting|vomiting
+|wd:Q127076|wd:Q2635499|vomiting|Projectile vomiting
+|wd:Q127076|wd:Q21993813|vomiting|chronic vomiting
+|wd:Q127076|wd:Q23012213|vomiting|glowing vomit
+|wd:Q127076|wd:Q5140942|vomiting|coffee ground vomiting
+|wd:Q127076|wd:Q54974197|vomiting|anticipatory vomiting
+|...|...|...|...|
+
+
+
+```
+$ pq-wikidata -f tsv -l -L enlabel "subclass_of_transitive(S,wd:'Q127076'),has_cause(S,C)" | tbl2ghwiki 
+```
+
+Note that affixing `_transitive` to a predicate will always translate to the reflexive transitive version of that predicate. Here we find all known causes of different kinds of vomiting in Wikidata:
+
+|S|C|S Label|C Label|
+|---|---|---|---|
+|wd:Q1570161|wd:Q1495657|hematemesis|gastrointestinal bleeding
+|wd:Q1938763|wd:Q16244733|fecal vomiting|intestinal obstruction
+|wd:Q5140942|wd:Q1883970|coffee ground vomiting|upper gastrointestinal bleeding
+|wd:Q127076|wd:Q133823|vomiting|migraine
+|wd:Q127076|wd:Q121041|vomiting|appendicitis
+|wd:Q127076|wd:Q164778|vomiting|rotavirus
+|wd:Q127076|wd:Q943897|vomiting|gastroparesis
+|wd:Q127076|wd:Q974135|vomiting|chemotherapy
 
 ## Installation
 
@@ -143,6 +210,8 @@ SELECT ?var ?drug ?condition WHERE {
 }
 ```
 
+(use `-C` to generate the SPARQL without executing it
+
 ## Other Queries
 
 Location of San Francisco:
@@ -151,6 +220,16 @@ Location of San Francisco:
 $ pq-wikidata -l -L enlabel  "geolocation(wd:'Q62',Lat,Long,Precision,Globe)"
 37.766667,-122.433333,1.0E-6,wd:Q2,$null$,$null$,$null$,Earth
 ```
+
+## Supported subsets of Wikidata
+
+Currently on a small subset of the overall Wikidata schema is exposed,
+mostly a subset focused around life science and geoscience/geographic
+use cases. More can be added on request.
+
+In future we may translate the entire Wikidata model (i.e. all classes
+and properties) into sparqlprog predicates.
+
 
 ## TODO
 

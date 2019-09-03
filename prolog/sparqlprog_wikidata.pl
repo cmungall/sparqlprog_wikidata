@@ -28,6 +28,7 @@
            instance_of_name/2,
 
            population_at/3,
+           in_time_interval/3,
            geolocation/5,
            geolocation/4,
            geolocation/3,
@@ -203,7 +204,7 @@ en_description(E,N) :- rdf(E,'http://schema.org/description',N),lang(N)="en".
 
 %! entity_search(+Term, ?Item, +Limit:int)
 %
-% named entity search
+% named entity search, using the wikibase EntitySearch function
 %
 entity_search(Term, Item) :-
         entity_search(Term, Item, 1).
@@ -321,7 +322,12 @@ pname_wid(bio,molecular_function, p680).
 pname_wid(bio,has_quality, p1552).
 pname_wid(bio,regulates, p128).
 
+% time
 
+in_time_interval(Start,End,Time) :-
+        Time >= Start,
+        Time =< End.
+        
     
 % CLASSES
 
@@ -412,13 +418,15 @@ cname_wid(bio,symptom, q169872).
 cname_wid(bio,medical_finding, q639907).
 cname_wid(bio,trait, q1211967).
 cname_wid(bio,pathway, q4915012).
-cname_wid(bio,macromolecular_complex, qQ22325163).
-cname_wid(bio,gene, qQ7187).
-cname_wid(bio,gene_product, qQ424689).
-cname_wid(bio,sequence_variant, qQ15304597).
+cname_wid(bio,macromolecular_complex, q22325163).
+cname_wid(bio,gene, q7187).
+cname_wid(bio,gene_product, q424689).
+cname_wid(bio,sequence_variant, q15304597).
+
+cname_wid(bio,hazard, q1132455).
 
 cname_wid(bio,therapy, q179661).
-cname_wid(bio,medical_procedure, qQ796194).
+cname_wid(bio,medical_procedure, q796194).
 
 
 % random
