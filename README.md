@@ -94,6 +94,13 @@ $ pq-wikidata -f tsv --consult tests/city_ontology.pro -l -L enlabel 'big_city(C
 |wd:Q1156|12442373|2011-01-01T00:00:00Z|Mumbai|$null$|$null$
 
 
+Location queries:
+
+Find all forests around San Francisco in a 100 mile radius
+```
+$ pq-wikidata -l -L enlabel  -f tsv "coordinate_location(wd:'Q62',Loc),geolocation_around(Loc,100,X),forest(X)"
+```
+
 The [entity_search/2](https://www.swi-prolog.org/pack/file_details/sparqlprog_wikidata/prolog/sparqlprog_wikidata.pl#entity_search/2) predicate provides access to the Wikibase EntitySearch function. The following example finds all subclasses of a symptom by name:
 
 ```
@@ -229,6 +236,10 @@ use cases. More can be added on request.
 
 In future we may translate the entire Wikidata model (i.e. all classes
 and properties) into sparqlprog predicates.
+
+## More examples
+
+See [bin/wikidata-examples.sh](bin/wikidata-examples.sh)
 
 
 ## TODO

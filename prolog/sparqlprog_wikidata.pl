@@ -331,6 +331,9 @@ in_time_interval(Start,End,Time) :-
     
 % CLASSES
 
+% env
+cname_wid(geo,ecosystem, q37813).
+
 % geo
 cname_wid(geo,geographic_entity, q27096213).
 cname_wid(geo,continent, q5107).
