@@ -1,6 +1,6 @@
 name(sparqlprog_wikidata).
 title('SPARQLprog bindings for WikiData').
-version('0.0.2').
+version('0.0.3').
 author('Chris Mungall','cmungall@gmail.com').
 packager('Chris Mungall','cmungall@gmail.com').
 home('https://github.com/cmungall/sparqlprog_wikidata').

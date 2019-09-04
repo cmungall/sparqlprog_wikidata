@@ -1,9 +1,13 @@
 /** <module> predicates for querying wikidata using logic predicates
 
-  
+Note: this module uses macros to generate predicates. When this is viewed online using pldoc, the actual predicates will not be visible.
+
+To see the full list of predicates, see pname_wid/3 and cname_wid/3
+which declares properties and classes. For each declaration,
+predicates will be generated. See the README for more details.
+
 */
 
-% Note: this module uses macros to generate predicates. For every pname_wid/3 and cname_wid/3, predicates will be generated 
 
 :- module(sparqlprog_wikidata,
           [
@@ -50,7 +54,6 @@
 :- rdf_register_prefix(skos, 'http://www.w3.org/2004/02/skos/core#').
 :- rdf_register_prefix(foaf,'http://xmlns.com/foaf/0.1/').
 :- rdf_register_prefix(dbont,'http://dbpedia.org/ontology/').
-%:- rdf_register_prefix(dcterms,'http://purl.org/dc/terms').
 :- rdf_register_prefix(wikipathways,'http://vocabularies.wikipathways.org/wp#').
 :- rdf_register_prefix(obo,'http://purl.obolibrary.org/obo/').
 :- rdf_register_prefix(so,'http://purl.obolibrary.org/obo/SO_').
@@ -67,6 +70,7 @@
 
 :- dynamic pred_info/3.
 
+% auto-generate predicates for properties
 user:term_expansion(pname_wid(Module,P,Id),
                     [(   Head :- Body),
                      (   Head_trans :- Body_trans),
@@ -140,6 +144,7 @@ user:term_expansion(pname_wid(Module,P,Id),
         Body_q = rdf(S,Px_q,O).
 
 
+% auto-generate predicates for classes
 user:term_expansion(cname_wid(Module,C,Id),
                     [Rule,
                      %RuleInf,
@@ -178,12 +183,20 @@ user:term_expansion(cname_wid(Module,C,Id),
         Body3 = rdf(I,zeroOrMore('http://www.wikidata.org/prop/direct/P279'),Cx),
         RuleIsa = (Head3 :- Body3).
 
+%! subont(+QueryCls, ?SubClass, ?SuperClass) is nondet.
+%
+%  given a query class find all SubClassOf axioms in the sub-ontology
+%  defined by any ancestor or decendant of QueryCls
 subont(C,A,B) :-
         subclass_of_transitive(C,A),subclass_of(A,B).
 subont(C,A,B) :-
         subclass_of_transitive(B,C),subclass_of(A,B).
 
 
+%! extract_subontology(+ClassName, +File) is det.
+%
+%  given a query ClassName, extract a sub-ontology based around that class using subont/3
+%  and save turtle to File
 extract_subontology(CN,File) :-
         ensure_loaded(library(semweb/turtle)),
         forall('??'(wd,(label(C,CN@en),subont(C,A,B),enlabel(A,AN))),
@@ -192,23 +205,41 @@ extract_subontology(CN,File) :-
                    rdf_assert(A,rdfs:label,AN,File))),
         rdf_save_turtle(File,[graph(File)]).
         
-
+%! enlabel(?Entity, ?Name) is nondet.
+%
+%  Name is the English language name of Entity
 enlabel(E,N) :- label(E,N),lang(N)="en".
+
+%! enlabelp(?Entity, ?Name) is nondet.
+%
+%  Name is the English language name of X where X is a directClaim on Entity
 enlabelp(E,N) :- rdf(X,wbont:directClaim,E),enlabel(X,N).
+
+%! enlabel_any(?Entity, ?Name) is nondet.
+%
+%  either enlabel/2 or enlabelp/2
 enlabel_any(E,N) :- enlabel(E,N).
 enlabel_any(E,N) :- enlabelp(E,N).
 
+%! en_alt_label(?Entity, ?Name) is nondet.
+%
+%  as enlabel/2 but using skos altLabel
 en_alt_label(E,N) :- rdf(E,skos:altLabel,N),lang(N)="en".
+
+%! en_description(?Entity, ?Desc) is nondet.
+%
+%  Desc is a description of Entity
+%
 en_description(E,N) :- rdf(E,'http://schema.org/description',N),lang(N)="en".
 
 
-%! entity_search(+Term, ?Item, +Limit:int)
+%! entity_search(+SearchTerm, ?Item) is nondet.
+%! entity_search(+SearchTerm, ?Item, +Limit:int) is nondet.
 %
 % named entity search, using the wikibase EntitySearch function
 %
 entity_search(Term, Item) :-
         entity_search(Term, Item, 1).
-
 
 entity_search(Term, Item, Limit) :-
         service(wikibase:mwapi,
@@ -324,6 +355,9 @@ pname_wid(bio,regulates, p128).
 
 % time
 
+%! in_time_interval(+Start, +End, +Time) is semidet.
+%
+%  true if Time is an xsd:date between Start and End dates
 in_time_interval(Start,End,Time) :-
         Time >= Start,
         Time =< End.
@@ -359,16 +393,25 @@ pname_wid(geo,tributary,p974).
 pname_wid(geo,geonames_id, p1566).
 pname_wid(geo,geonames_feature_code, p2452).
 
+%! population_at(?PopulatedPlace, ?Population, ?Time) is nondet.
+%
+%  PopulatedPlace has a population size of Population at Time
 population_at(E,Pop,Time) :-
         population_e2s(E,S),
         point_in_time_s2q(S,Time),
         population_s2v(S,Pop).
 
 
+%! coordinate_location_node(?Entity, ?Node) is nondet.
+%
+%  in general you do not need to use this directly
 coordinate_location_node(E,N) :-
         coordinate_location_e2s(E,S),
         coordinate_location_psv(S,N).
 
+%! geolocation(?Entity, ?Lat, ?Long, ?Precision, ?Globe) is nondet.
+%
+%  Entity is located at Lat-Long on Globe 
 geolocation(E,Lat,Long,Precision,Globe) :-
         coordinate_location_node(E,N),
         node_geolocation(N,Lat,Long,Precision,Globe).
@@ -392,6 +435,10 @@ node_geolocation(N,Lat,Long) :-
         rdf(N,wbont:geoLatitude,Lat),
         rdf(N,wbont:geoLongitude,Long).
 
+%% geolocation_around(+Center, +Radius, ?Entity) is nondet.
+%
+%  true if Entity is found within Radium miles of Center.
+%  use coordinate_location/2 to map between a GeoEntity and its Center
 geolocation_around(Center, Radius, X) :-
         service(wikibase:around,
                 (   coordinate_location(X,_Loc),
