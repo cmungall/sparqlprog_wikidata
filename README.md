@@ -118,12 +118,13 @@ $ pq-wikidata -l -L enlabel "entity_search(vomiting,Match),subclass_of_transitiv
 |...|...|...|...|
 
 
-
-```
-$ pq-wikidata -f tsv -l -L enlabel "subclass_of_transitive(S,wd:'Q127076'),has_cause(S,C)" | tbl2ghwiki 
-```
-
 Note that affixing `_transitive` to a predicate will always translate to the reflexive transitive version of that predicate. Here we find all known causes of different kinds of vomiting in Wikidata:
+
+
+```
+$ pq-wikidata -l -L enlabel "subclass_of_transitive(S,wd:'Q127076'),has_cause(S,C)" 
+```
+
 
 |S|C|S Label|C Label|
 |---|---|---|---|
@@ -151,6 +152,13 @@ To run a service:
 ```
 docker run -p 9083:9083 cmungall/sparqlprog_wikidata
 ```
+
+There is currently a [Python library](https://pypi.org/project/sparqlprog/) for connecting to a sparqlprog service.
+
+You can find examples of Jupyter notebooks such as [this
+one](https://nbviewer.jupyter.org/github/cmungall/sparqlprog-python/blob/master/Notebook_02_Programs.ipynb)
+(which uses the dbpedia endpoint, but can easily be adapted)
+
 
 ### Within SWI Environment
 
