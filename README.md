@@ -4,10 +4,12 @@
 
 This is a module for
 [sparqlprog](https://github.com/cmungall/sparqlprog) that provides
-convenience predicates for making sparql queries over wikidata using
+convenience predicates for making queries over the [wikidata sparql endpoint](https://query.wikidata.org/) using
 logic programming terms. It allows you to define reusable query
 predicates, and to integrate programming constructs with queries in a
 declarative way.
+
+It can be used via the command line, via [Python](https://github.com/cmungall/sparqlprog-python), or within prolog programs.
 
 ## Examples (command line):
 
@@ -34,7 +36,9 @@ yields:
 
 The `-l` argument auto-adds labels for every column (this is meaningless for the population column but this is included for consistency)
 
-Create a file `city_ontology.pro` with a single line:
+The unary predicate `city/1` is mapped to [Q515](http://www.wikidata.org/entity/Q515), and `part_of_continent` to [P30](http://www.wikidata.org/prop/direct/P30).
+
+We can also define our own predicates. Create a file `city_ontology.pro` with a single line:
 
 ```
 big_city(City) :- city(City),population(City,Pop),Pop>10000000.
@@ -69,29 +73,29 @@ $ pq-wikidata -f tsv --consult tests/city_ontology.pro -l -L enlabel 'big_city(C
 
 |City|Pop|Time|City Name|---|---|
 |---|---|---|---|---|---|
-|wd:Q1353|16787941|2011-01-01T00:00:00Z|Delhi|$null$|$null$
-|wd:Q406|13624240|2011-01-01T00:00:00Z|Istanbul|$null$|$null$
-|wd:Q649|11856578|2012-01-01T00:00:00Z|Moscow|$null$|$null$
-|wd:Q3630|9607787|2010-01-01T00:00:00Z|Jakarta|$null$|$null$
-|wd:Q404763|12010000|2011-01-01T00:00:00Z|Nanyang|$null$|$null$
-|wd:Q649|11979529|2013-01-01T00:00:00Z|Moscow|$null$|$null$
-|wd:Q649|11503501|2010-01-01T00:00:00Z|Moscow|$null$|$null$
-|wd:Q11746|10220000|2013-01-01T00:00:00Z|Wuhan|$null$|$null$
-|wd:Q406|14160467|2013-01-01T00:00:00Z|Istanbul|$null$|$null$
-|wd:Q649|11776764|2011-01-01T00:00:00Z|Moscow|$null$|$null$
-|wd:Q42622|10465994|2010-01-01T00:00:00Z|Suzhou|$null$|$null$
-|wd:Q174|11316149|2011-01-01T00:00:00Z|São Paulo|$null$|$null$
-|wd:Q406|13255685|2010-01-01T00:00:00Z|Istanbul|$null$|$null$
-|wd:Q406|13854740|2012-01-01T00:00:00Z|Istanbul|$null$|$null$
-|wd:Q1355|8425970|2011-01-01T00:00:00Z|Bangalore|$null$|$null$
-|wd:Q174|11253503|2010-01-01T00:00:00Z|São Paulo|$null$|$null$
-|wd:Q1490|13159388|2010-01-01T00:00:00Z|Tokyo|$null$|$null$
-|wd:Q15174|10628900|2013-01-01T00:00:00Z|Shenzhen|$null$|$null$
-|wd:Q3838|9464000|2012-01-01T00:00:00Z|Kinshasa|$null$|$null$
-|wd:Q373346|10820000|2011-01-01T00:00:00Z|Linyi|$null$|$null$
-|wd:Q1352|4646732|2011-01-01T00:00:00Z|Chennai|$null$|$null$
-|wd:Q11739|7129629|2010-01-01T00:00:00Z|Lahore|$null$|$null$
-|wd:Q1156|12442373|2011-01-01T00:00:00Z|Mumbai|$null$|$null$
+|wd:Q1353|16787941|2011-01-01T00:00:00Z|Delhi|$null$|$null$|
+|wd:Q406|13624240|2011-01-01T00:00:00Z|Istanbul|$null$|$null$|
+|wd:Q649|11856578|2012-01-01T00:00:00Z|Moscow|$null$|$null$|
+|wd:Q3630|9607787|2010-01-01T00:00:00Z|Jakarta|$null$|$null$|
+|wd:Q404763|12010000|2011-01-01T00:00:00Z|Nanyang|$null$|$null$|
+|wd:Q649|11979529|2013-01-01T00:00:00Z|Moscow|$null$|$null$|
+|wd:Q649|11503501|2010-01-01T00:00:00Z|Moscow|$null$|$null$|
+|wd:Q11746|10220000|2013-01-01T00:00:00Z|Wuhan|$null$|$null$|
+|wd:Q406|14160467|2013-01-01T00:00:00Z|Istanbul|$null$|$null$|
+|wd:Q649|11776764|2011-01-01T00:00:00Z|Moscow|$null$|$null$|
+|wd:Q42622|10465994|2010-01-01T00:00:00Z|Suzhou|$null$|$null$|
+|wd:Q174|11316149|2011-01-01T00:00:00Z|São Paulo|$null$|$null$|
+|wd:Q406|13255685|2010-01-01T00:00:00Z|Istanbul|$null$|$null$|
+|wd:Q406|13854740|2012-01-01T00:00:00Z|Istanbul|$null$|$null$|
+|wd:Q1355|8425970|2011-01-01T00:00:00Z|Bangalore|$null$|$null$|
+|wd:Q174|11253503|2010-01-01T00:00:00Z|São Paulo|$null$|$null$|
+|wd:Q1490|13159388|2010-01-01T00:00:00Z|Tokyo|$null$|$null$|
+|wd:Q15174|10628900|2013-01-01T00:00:00Z|Shenzhen|$null$|$null$|
+|wd:Q3838|9464000|2012-01-01T00:00:00Z|Kinshasa|$null$|$null$|
+|wd:Q373346|10820000|2011-01-01T00:00:00Z|Linyi|$null$|$null$|
+|wd:Q1352|4646732|2011-01-01T00:00:00Z|Chennai|$null$|$null$|
+|wd:Q11739|7129629|2010-01-01T00:00:00Z|Lahore|$null$|$null$|
+|wd:Q1156|12442373|2011-01-01T00:00:00Z|Mumbai|$null$|$null$|
 
 
 Location queries:
@@ -109,16 +113,16 @@ $ pq-wikidata -l -L enlabel "entity_search(vomiting,Match),subclass_of_transitiv
 
 |Match|Symptom|Match Label|Symptom Label|
 |---|---|---|---|
-|wd:Q127076|wd:Q127076|vomiting|vomiting
-|wd:Q127076|wd:Q2635499|vomiting|Projectile vomiting
-|wd:Q127076|wd:Q21993813|vomiting|chronic vomiting
-|wd:Q127076|wd:Q23012213|vomiting|glowing vomit
-|wd:Q127076|wd:Q5140942|vomiting|coffee ground vomiting
-|wd:Q127076|wd:Q54974197|vomiting|anticipatory vomiting
+|wd:Q127076|wd:Q127076|vomiting|vomiting|
+|wd:Q127076|wd:Q2635499|vomiting|Projectile vomiting|
+|wd:Q127076|wd:Q21993813|vomiting|chronic vomiting|
+|wd:Q127076|wd:Q23012213|vomiting|glowing vomit|
+|wd:Q127076|wd:Q5140942|vomiting|coffee ground vomiting|
+|wd:Q127076|wd:Q54974197|vomiting|anticipatory vomiting|
 |...|...|...|...|
 
 
-Note that affixing `_transitive` to a predicate will always translate to the reflexive transitive version of that predicate. Here we find all known causes of different kinds of vomiting in Wikidata:
+Note that affixing `_transitive` to a predicate will always translate to the reflexive transitive version of that predicate (equivalent to affixing a `*` in SPARQL). Here we find all known causes of different kinds of vomiting in Wikidata, using the reflexive transitive closure of the wikidata `subClassOf` predicate.
 
 
 ```
@@ -128,14 +132,14 @@ $ pq-wikidata -l -L enlabel "subclass_of_transitive(S,wd:'Q127076'),has_cause(S,
 
 |S|C|S Label|C Label|
 |---|---|---|---|
-|wd:Q1570161|wd:Q1495657|hematemesis|gastrointestinal bleeding
-|wd:Q1938763|wd:Q16244733|fecal vomiting|intestinal obstruction
-|wd:Q5140942|wd:Q1883970|coffee ground vomiting|upper gastrointestinal bleeding
-|wd:Q127076|wd:Q133823|vomiting|migraine
-|wd:Q127076|wd:Q121041|vomiting|appendicitis
-|wd:Q127076|wd:Q164778|vomiting|rotavirus
-|wd:Q127076|wd:Q943897|vomiting|gastroparesis
-|wd:Q127076|wd:Q974135|vomiting|chemotherapy
+|wd:Q1570161|wd:Q1495657|hematemesis|gastrointestinal bleeding|
+|wd:Q1938763|wd:Q16244733|fecal vomiting|intestinal obstruction|
+|wd:Q5140942|wd:Q1883970|coffee ground vomiting|upper gastrointestinal bleeding|
+|wd:Q127076|wd:Q133823|vomiting|migraine|
+|wd:Q127076|wd:Q121041|vomiting|appendicitis|
+|wd:Q127076|wd:Q164778|vomiting|rotavirus|
+|wd:Q127076|wd:Q943897|vomiting|gastroparesis|
+|wd:Q127076|wd:Q974135|vomiting|chemotherapy|
 
 ## Installation
 
@@ -168,10 +172,10 @@ Install SWI-Prolog from http://www.swi-prolog.org
 
 ## How it works
 
-For each class in the defined subset, for example [Country](http://www.wikidata.org/entity/Q551), multiple predicates will be defined:
+For each class in the defined subset, for example [City](http://www.wikidata.org/entity/Q515), multiple predicates will be defined:
 
  * `city/1` - any instance of City, or its subclasses
- * `city_direct/1` - any instance of City (ignoring subclasses)
+ * `city_direct/1` - any instance of City (no inference - ignores subclasses)
  * `city_iri/1` - IRI for City in WikiData
 
 For example, the query
@@ -225,7 +229,7 @@ SELECT ?var ?drug ?condition WHERE {
 }
 ```
 
-(use `-C` to generate the SPARQL without executing it
+(use `-C` to generate the SPARQL without executing it)
 
 ## Other Queries
 
@@ -240,7 +244,8 @@ $ pq-wikidata -l -L enlabel  "geolocation(wd:'Q62',Lat,Long,Precision,Globe)"
 
 Currently on a small subset of the overall Wikidata schema is exposed,
 mostly a subset focused around life science and geoscience/geographic
-use cases. More can be added on request.
+use cases. More can be added on request. It is also very to easy for
+you to do this locally, and pull requests are welcome. Just edit the file [sparqlprog_wikidata.pl](https://www.swi-prolog.org/pack/file_details/sparqlprog_wikidata/prolog/sparqlprog_wikidata.pl)
 
 In future we may translate the entire Wikidata model (i.e. all classes
 and properties) into sparqlprog predicates.
