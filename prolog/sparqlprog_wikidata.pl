@@ -27,7 +27,6 @@ predicates will be generated. See the README for more details.
 
            entity_search/2,
            entity_search/3,
-           exact_match/2,
            entailed_instance_of_name/2,
            instance_of_name/2,
 
