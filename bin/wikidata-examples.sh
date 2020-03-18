@@ -88,3 +88,15 @@ pq-wd  'ro_id(P,X)'
 
 # Get GO to MESH mappings (via shared WD entry)
 pq-wd  "mesh_id(X,M),go_id(X,G)"
+
+# mesh xrefs for immunoassays
+pq-wikidata  "immunoassay_iri(X),subclass_of_transitive(C,X),mesh_id(C,M),enlabel(C,CN)" "x(C,CN,M)"
+
+pq-wikidata -L enlabel -l 'disease_outbreak(X),part_of(X,Y)'
+
+# total COVID-19 cases
+pq-wikidata -L enlabel -l "number_of_cases(wd:'Q81068910',N)"
+
+# cases by time
+pq-wikidata -L enlabel -l "number_of_cases(wd:'Q81068910',N,T,P)"
+

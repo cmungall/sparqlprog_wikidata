@@ -11,7 +11,6 @@ predicates will be generated. See the README for more details.
 
 :- module(sparqlprog_wikidata,
           [
-
            property_constraint_pv/4,
            
            var_drug_condition/4,
@@ -29,6 +28,7 @@ predicates will be generated. See the README for more details.
            entity_search/3,
            entailed_instance_of_name/2,
            instance_of_name/2,
+           instance_of_qtype/3,
 
            population_at/3,
            in_time_interval/3,
@@ -67,6 +67,10 @@ predicates will be generated. See the README for more details.
 
 :- rdf_register_prefix(instance_of,'http://www.wikidata.org/prop/direct/P31').
 
+:- discontiguous sparqlprog_wikidata:pname_wid/3.
+:- discontiguous sparqlprog_wikidata:cname_wid/3.
+
+        
 :- dynamic pred_info/3.
 
 % auto-generate predicates for properties
@@ -266,6 +270,7 @@ entity_search(Term, Item, Limit) :-
 % PROPS
 
 % meta
+pname_wid(meta,of, p642).
 pname_wid(meta,instance_of, p31).
 pname_wid(meta,subclass_of, p279).
 pname_wid(meta,subproperty_of, p1647).
@@ -284,6 +289,11 @@ entailed_instance_of_name(I,CN) :-
         subclass_of_transitive(C1,C),
         rdf(C,rdfs:label,CN@en).
 
+instance_of_qtype(I,C,Q) :-
+        instance_of_e2s(I,S),
+        of_s2q(S,Q),
+        instance_of_s2v(S,C).
+        
 
 property_constraint_pv(P,C,PP,V) :-
         property_constraint_e2s(P,S),
@@ -295,6 +305,9 @@ pname_wid(meta,author, p50).
 pname_wid(meta,exact_match, p2888).
 
 pname_wid(general,part_of, p361).
+
+% geo
+pname_wid(geo,has_country, p17).  % rename to avoid confusion
 
 
 % bio
@@ -322,9 +335,17 @@ pname_wid(bio,genetic_association, p2293).
 pname_wid(bio,treated_by_drug, p2176).
 pname_wid(bio,symptoms, p780).
 pname_wid(bio,pathogen_transmission_process, p1060).
+pname_wid(bio,has_natural_reservoir, p1605).
+pname_wid(bio,host, p2975).
 pname_wid(bio,has_cause, p828).
+pname_wid(bio,has_immediate_cause, p1478).
 pname_wid(bio,biological_variant_of, p3433).
 pname_wid(bio,has_part, p527).
+
+% epidemiology
+pname_wid(bio,number_of_deaths, p1120).
+pname_wid(bio,number_of_cases, p1603).
+pname_wid(bio,valid_in_place, p3005).
 
 % https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries/examples#Get_known_variants_reported_in_CIViC_database_(Q27612411)_of_genes_reported_in_a_Wikipathways_pathway:_Bladder_Cancer_(Q30230812)
 pname_wid(bio,positive_therapeutic_predictor, p3354).
@@ -477,6 +498,11 @@ cname_wid(bio,hazard, q1132455).
 cname_wid(bio,therapy, q179661).
 cname_wid(bio,medical_procedure, q796194).
 
+cname_wid(bio,immunoassay, q759183).
+
+cname_wid(bio,disease_outbreak, q3241045).
+cname_wid(bio,pandemic, q12184).
+
 
 % random
 cname_wid(geo,power_station, q159719).
@@ -484,13 +510,32 @@ cname_wid(geo,power_station, q159719).
 % TODO
 %nary(ptp_var_drug_condition, positive_therapeutic_predictor, medical_condition_treated).
 
-
+        
 
 var_drug_condition(V,D,C,positive_therapeutic_predictor) :-
         positive_therapeutic_predictor_e2s(V,S),
         medical_condition_treated_s2q(S,C),
         positive_therapeutic_predictor_s2v(S,D).
 
+:- export(disease_outbreak_of/2).
+disease_outbreak_of(I,D) :-
+        disease_outbreak_iri(C),
+        instance_of_qtype(I,C,D).
 
+:- export(number_of_deaths/4).
+number_of_deaths(I,Num,Time,Place) :-
+        number_of_deaths_e2s(I,S),
+        point_in_time_s2q(S,Time),
+        valid_in_place_s2q(S,Place),
+        number_of_deaths_s2v(S,Num).
+        
+:- export(number_of_cases/4).
+number_of_cases(I,Num,Time,Place) :-
+        number_of_cases_e2s(I,S),
+        point_in_time_s2q(S,Time),
+        valid_in_place_s2q(S,Place),
+        number_of_cases_s2v(S,Num).
+        
+        
 
 
