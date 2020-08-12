@@ -40,6 +40,8 @@ predicates will be generated. See the README for more details.
            node_geolocation/4,
            node_geolocation/3,
 
+           cas_covid_19_antiviral/1,
+
            geolocation_around/3
 
            ]).
@@ -305,6 +307,7 @@ pname_wid(meta,author, p50).
 pname_wid(meta,exact_match, p2888).
 
 pname_wid(general,part_of, p361).
+pname_wid(general,catalog, p972).
 
 % geo
 pname_wid(geo,has_country, p17).  % rename to avoid confusion
@@ -476,6 +479,9 @@ pname_wid(chem,median_lethal_dose, p2240).
 % bio
 cname_wid(bio,bioproperty, q22988603).
 
+cname_wid(bio,breed,q38829).
+
+
 cname_wid(bio,cancer, q12078).
 cname_wid(bio,disease, q12136).
 cname_wid(bio,infectious_disease, q18123741).
@@ -536,6 +542,5 @@ number_of_cases(I,Num,Time,Place) :-
         valid_in_place_s2q(S,Place),
         number_of_cases_s2v(S,Num).
         
-        
-
-
+cas_covid_19_antiviral(C) :-
+        catalog(C,wd:'Q90481889').
