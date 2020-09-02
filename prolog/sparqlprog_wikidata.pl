@@ -350,6 +350,9 @@ pname_wid(bio,number_of_deaths, p1120).
 pname_wid(bio,number_of_cases, p1603).
 pname_wid(bio,valid_in_place, p3005).
 
+% trials
+pname_wid(bio,research_intervention, p4844).
+
 % https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries/examples#Get_known_variants_reported_in_CIViC_database_(Q27612411)_of_genes_reported_in_a_Wikipathways_pathway:_Bladder_Cancer_(Q30230812)
 pname_wid(bio,positive_therapeutic_predictor, p3354).
 pname_wid(bio,negative_therapeutic_predictor, p3355).
@@ -358,6 +361,7 @@ pname_wid(bio,negative_diagnostic_predictor, p3357).
 pname_wid(bio,positive_prognostic_predictor, p3358).
 pname_wid(bio,negative_prognostic_predictor, p3359).
 pname_wid(bio,medical_condition_treated, p2175).
+pname_wid(bio,medical_condition, p1050). % used interchangeably with above?
 
 % beacon
 pname_wid(bio,physically_interacts_with, p129).
@@ -482,6 +486,7 @@ cname_wid(bio,bioproperty, q22988603).
 cname_wid(bio,breed,q38829).
 
 
+cname_wid(bio,neoplasm, q1216998).
 cname_wid(bio,cancer, q12078).
 cname_wid(bio,disease, q12136).
 cname_wid(bio,infectious_disease, q18123741).
@@ -503,11 +508,14 @@ cname_wid(bio,hazard, q1132455).
 
 cname_wid(bio,therapy, q179661).
 cname_wid(bio,medical_procedure, q796194).
+cname_wid(bio,protein_kinase_inhibitor, q7251487).
 
 cname_wid(bio,immunoassay, q759183).
 
 cname_wid(bio,disease_outbreak, q3241045).
 cname_wid(bio,pandemic, q12184).
+
+cname_wid(bio,clinical_trial, q30612).
 
 
 % random
