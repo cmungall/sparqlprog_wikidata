@@ -49,7 +49,14 @@ pq-wd    "city_inf(C),part_of_continent(C,X1),part_of_continent(C,X2),X1@>X2,enl
 # population of big cities during a particular time interval
 pq-wikidata --consult tests/city_ontology.pro -l -L enlabel 'big_city(City),population_at(City,Pop,At),in_time_interval("2010-01-01"^^xsd:dateTime,"2013-01-01"^^xsd:dateTime,At)'
 
+# get ID for USA
+pq-wikidata 'entity_search("USA",_)'
 
+# lakes in USA
+pq-wikidata -l -L enlabel "lake(X),has_country(X,wd:'Q30')"
+
+# number of lakes in USA
+pq-wikidata   "aggregate(count(X),(lake(X),has_country(X,wd:'Q30')),N)" N
 
 # --
 # Wikidata schema/ontology

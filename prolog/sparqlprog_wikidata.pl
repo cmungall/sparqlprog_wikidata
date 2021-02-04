@@ -11,6 +11,10 @@ predicates will be generated. See the README for more details.
 
 :- module(sparqlprog_wikidata,
           [
+
+           has_wikipedia/3,
+           has_wikipedia_en/2,
+           
            property_constraint_pv/4,
            
            var_drug_condition/4,
@@ -30,6 +34,7 @@ predicates will be generated. See the README for more details.
            instance_of_name/2,
            instance_of_qtype/3,
 
+           award_received_at/3,
            population_at/3,
            in_time_interval/3,
            geolocation/5,
@@ -56,6 +61,7 @@ predicates will be generated. See the README for more details.
 :- rdf_register_prefix(foaf,'http://xmlns.com/foaf/0.1/').
 :- rdf_register_prefix(dbont,'http://dbpedia.org/ontology/').
 :- rdf_register_prefix(wikipathways,'http://vocabularies.wikipathways.org/wp#').
+:- rdf_register_prefix(schema,'http://schema.org/').
 :- rdf_register_prefix(obo,'http://purl.obolibrary.org/obo/').
 :- rdf_register_prefix(so,'http://purl.obolibrary.org/obo/SO_').
 
@@ -255,7 +261,18 @@ entity_search(Term, Item, Limit) :-
                     rdf(bd:serviceParam, mwapi:limit, Limit ^^ xsd:int),
                     rdf(Item, wikibase:apiOutputItem, mwapi:item))).
 
-        
+% --------------------
+% meta
+% --------------------
+
+has_wikipedia(E,P,WP) :-
+        rdf(P,schema:about,E),
+        rdf(P,schema:isPartOf,WP).
+has_wikipedia_en(E,P) :-
+        rdf(P,schema:about,E),
+        rdf(P,schema:isPartOf,'https://en.wikipedia.org/').
+
+
 
 
 % --------------------
@@ -280,8 +297,6 @@ pname_wid(meta,equivalent_property, p1628).
 pname_wid(meta,property_constraint, p2302).
 pname_wid(meta,properties_for_this_type, p1963).
 
-pname_wid(meta,point_in_time, p585).
-
 
 instance_of_name(I,CN) :-
         instance_of(I,C),
@@ -305,12 +320,19 @@ property_constraint_pv(P,C,PP,V) :-
 % general
 pname_wid(meta,author, p50).
 pname_wid(meta,exact_match, p2888).
+pname_wid(meta,point_in_time,p585).
+
 
 pname_wid(general,part_of, p361).
 pname_wid(general,catalog, p972).
 
 % geo
 pname_wid(geo,has_country, p17).  % rename to avoid confusion
+
+% people
+pname_wid(social,award_received,p166).
+pname_wid(social,occupation,p106).
+pname_wid(social,sex_or_gender,p21).
 
 
 % bio
@@ -392,8 +414,13 @@ in_time_interval(Start,End,Time) :-
     
 % CLASSES
 
+% people
+cname_wid(social,biologist,q864503).
+cname_wid(social,science_award,q11448906).
+
 % env
 cname_wid(geo,ecosystem, q37813).
+
 
 % geo
 cname_wid(geo,geographic_entity, q27096213).
@@ -405,6 +432,7 @@ cname_wid(geo,landform, q271669).
 cname_wid(geo,undersea_landform, q55182671).
 cname_wid(geo,wetland,q170321).
 cname_wid(geo,forest,q4421).
+cname_wid(geo,lake,q23397).
 cname_wid(geo,protected_area,q3825807).
 
 
@@ -419,6 +447,12 @@ pname_wid(geo,tributary,p974).
 
 pname_wid(geo,geonames_id, p1566).
 pname_wid(geo,geonames_feature_code, p2452).
+
+award_received_at(P,A,Time) :-
+        award_received_e2s(P,S),
+        point_in_time_s2q(S,Time),
+        award_received_s2v(S,A).
+
 
 %! population_at(?PopulatedPlace, ?Population, ?Time) is nondet.
 %
